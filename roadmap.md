@@ -122,24 +122,8 @@ This roadmap outlines the **8-week implementation timeline** to deploy a budget-
 ## 📊 Summary Timeline Tracker
 
 | Week | Phase | Primary Objectives | Deliverable Checkpoint |
-| --- | --- | --- | --- |
-| **1 - 2** | Phase 1 | Database schemas, Telegraf collectors, and reachability tracking.
-
- | TimescaleDB | Hypertables | capturing | live metrics.
-
- |
-| **3 - 5** | Phase 2 | Custom Go application for link flapping, loops, and telemetry states.
-
- | Go backend generating precise event tracking logs.
-
- |
-| **6 - 7** | Phase 3 | Grafana panels | Telegram notification scripts | config tools | and ticket hooks.
-
- | Interactive dashboard layout and webhook alerts functional.
-
- |
-| **8** | Phase 4 | Scalability tuning, validation runs, technical user review, and project sign-off.
-
- | Production code deployed and system keys handed over.
-
- |
+| :---: | :--- | :--- | :--- |
+| **1 - 2** | Phase 1 | Database schemas, Telegraf collectors, and reachability tracking. | TimescaleDB Hypertables capturing live metrics. |
+| **3 - 5** | Phase 2 | Custom Go application for link flapping, loops, and telemetry states. | Go backend generating precise event tracking logs. |
+| **6 - 7** | Phase 3 | Grafana panels, Telegram notification scripts, config tools, and ticket hooks. | Interactive dashboard layout and webhook alerts functional. |
+| **8** | Phase 4 | Scalability tuning, validation runs, technical user review, and project sign-off. | Production code deployed and system keys handed over. |
