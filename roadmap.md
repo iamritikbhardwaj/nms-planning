@@ -1,129 +1,106 @@
 # Project Roadmap: Custom Network Management System (NMS)
 
-This roadmap outlines the **8-week implementation timeline** to deploy a budget-optimized, high-performance Network Management System utilizing **Telegraf** for data ingestion, **TimescaleDB** for unified storage, and **Grafana** for data visualization. Custom business logic (such as sliding-window loop detection and custom webhook alerting) will be handled by a lightweight **Custom Go Middleware Application**.
+This roadmap outlines the **4-month (16-week) enterprise implementation timeline** to deploy a high-performance Network Management System utilizing **Telegraf** for data ingestion, **TimescaleDB** for unified relational and time-series storage, and **Grafana** for data visualization. Complex business logic (such as sliding-window loop detection, metric correlation, and custom webhook alerting) will be executed by a lightweight **Custom Go Middleware Application**.
 
 ---
 
 ## 🏗️ System Architecture Overview
 
-```
- [ Network Devices ] (Switches, Routers, Firewalls, UPS)
-         │
-         ▼ (SNMP Get / Bulk / Traps / Syslog)
- ┌────────────────────────────────────────────────────────┐
- │ Telegraf Ingestion Layer (Go-Native SNMP Plugin)       │
- └───────────────────────────┬────────────────────────────┘
-                             │
-                             ▼ (High-Velocity Writes)
- ┌────────────────────────────────────────────────────────┐
- │ TimescaleDB (Unified Relational & Time-Series Engine)  │ ◄─── [ Custom Go Middleware ]
- └───────────────────────────┬────────────────────────────┘      • Link Flap Windowing
-                             │                                   • MAC Flapping Loops
-                             ▼ (Live Querying)                   • Telegram / Email Bots
- ┌────────────────────────────────────────────────────────┐      • Jira/ServiceNow Webhooks
- │ Grafana Visualization UI (Graphs, Dashboards, Alerts)  │
- └────────────────────────────────────────────────────────u
+The system architecture is structured as a decoupled data pipeline divided into four distinct layers to ensure high processing throughput, strict separation of concerns, and reliable horizontal scalability:
 
-```
+---
+
+[ Network Devices ] (Switches, Routers, Firewalls, UPS)
+│
+▼ (SNMP Get / Bulk / Traps / Syslog)
+┌────────────────────────────────────────────────────────┐
+│ Telegraf Ingestion Layer (Go-Native SNMP Plugin)       │
+└───────────────────────────┬────────────────────────────┘
+│
+▼ (High-Velocity Writes)
+┌────────────────────────────────────────────────────────┐
+│ TimescaleDB (Unified Relational & Time-Series Engine)  │ ◄─── [ Custom Go Middleware ]
+└───────────────────────────┬────────────────────────────┘      • Link Flap Windowing
+│                                   • MAC Flapping Loops
+▼ (Live Querying)                   • Telegram / Email Bots
+┌────────────────────────────────────────────────────────┐      • Jira/ServiceNow Webhooks
+│ Grafana Visualization UI (Graphs, Dashboards, Alerts)  │
+└────────────────────────────────────────────────────────u
 
 ---
 
 ## 🗓️ Phase-by-Phase Roadmap
 
-### 🏁 Phase 1: Core Core Ingestion & TimescaleDB Database Setup
+### 🏁 Phase 1: Environment Provisioning, TimescaleDB Schema & Ingestion Core
 
-**Timeline:** Weeks 1 – 2
+**Timeline:** Month 1 (Weeks 1 – 4)  
+**Focus:** Core infrastructure setup, foundational data modeling, and basic network reachability discovery.
 
-**Focus:** Infrastructure provisioning, data pipelines, and core reachability monitoring.
-
-* **Milestone 1:** Metric Ingestion & TimescaleDB Core Operational.
-
+* **Milestone 1:** Ingestion Pipeline Operational & TimescaleDB Base Metrics Capture.
 * **Tasks & Deliverables:**
-* **TimescaleDB Provisioning:** Install PostgreSQL and enable the TimescaleDB extension.
-
-* **Schema Design:** Define relational tables for device inventories and metadata alongside localized `Hypertables` optimized for multi-million row SNMP time-series data retention.
-
-* **Telegraf Setup:** Deploy Telegraf and configure the native `inputs.snmp` plugin to track standard OIDs (chassis health, uptime, interface indexes).
-
-* **Track A Deployment:** Establish foundational polling loops for availability metrics (Device/Interface Up-Down via `ifOperStatus` and ICMP Ping sweeps).
-
-* **Syslog Engine:** Configure Telegraf's `inputs.syslog` plugin to capture incoming device system logs into TimescaleDB.
+  * **TimescaleDB Provisioning:** Install PostgreSQL and enable the TimescaleDB extension on designated hosting servers.
+  * **Schema Design:** Design the primary relational layout for corporate network inventory tables, hardware device configurations, and metadata pools. Enable and model TimescaleDB `Hypertables` partitioned by time vectors to buffer intensive SNMP time-series variables.
+  * **Telegraf Core Orchestration:** Deploy Telegraf agents and map the core `inputs.snmp` plugin configuration. Import standard MIB definitions (MIB-II, IF-MIB) to safely parse fundamental counter metrics.
+  * **Availability Metrics Deployment (Track A Foundations):** Establish continuous high-velocity polling queues for device reachability checks (ICMP Ping sweeps) and interface up/down states using standard `ifOperStatus` matrices.
+  * **Syslog Target Ingestion:** Spin up Telegraf's `inputs.syslog` network socket listeners to aggregate incoming asynchronous operating logs straight into indexed tables within TimescaleDB.
 
 ---
 
-### 🧠 Phase 2: Custom Go Alerting Engine & Advanced Network Logic
+### 🧠 Phase 2: Custom Go Middleware Development & Advanced Network Logic
 
-**Timeline:** Weeks 3 – 5
+**Timeline:** Month 2 (Weeks 5 – 8)  
+**Focus:** Backend programming in Go to calculate sophisticated metric combinations, sliding-window anomalies, and compliance triggers.
 
-**Focus:** Custom backend development in Go to process complex telemetry thresholds and compliance states.
-
-* **Milestone 2:** Custom L2/L3 Alerting Logic Verified.
-
+* **Milestone 2:** Custom Go Alerting Logic & Algorithmic Thresholds Verified.
 * **Tasks & Deliverables:**
-* **Go Middleware Initialization:** Set up a lightweight Go microservice utilizing the `pgx` driver to interface with TimescaleDB.
-* **Algorithmic Event Trackers (Track B):**
-* **Link Flap Detection:** Write sliding-window database logic in Go to track interface state cycles over short timeframes, suppressing alerts if criteria are exceeded.
-
-* **MAC/Loop Processing:** Code specific analytics to identify MAC address changes and broadcast loops inside input data tables.
-
-* **Telemetry Triggers:** Implement evaluation thresholds for high-capacity hardware states (CPU spikes, memory exhaustion, rising optical SFP dBm levels, fan failures, and PoE budgeting).
-
-* **Edge Security Hooks:** Configure detection logic for invalid SNMP authentication traps, Port Security triggers, and DHCP Snooping anomalies.
+  * **Go Application Architecture:** Initialize the custom Go microservice. Implement optimized connection pooling configurations utilizing the native `pgxpool` cluster management driver to interface with TimescaleDB.
+  * **Complex Event Processors (Track B Implementation):**
+    * **Link Flap Detection:** Program sliding-window database queries in Go to identify rapid interface state cycles over custom time increments, implementing damping flags to suppress noisy devices.
+    * **MAC & Topology Analysis:** Code lookup routines to isolate immediate MAC address table fluctuations across access layers and flag prospective loop states.
+    * **Telemetry Parsing:** Configure deep state threshold triggers parsing hardware environmental matrices (CPU spikes, memory leakage, fan performance drops, internal temperature limits, and PoE power constraints).
+  * **Interface Optical Diagnostics:** Map specific vendor-dependent OID data arrays to capture digital diagnostic metrics, tracking SFP Tx/Rx optical laser power performance in real-time.
+  * **Edge Security Integration:** Set up capture mechanisms for active SNMP authentication failures, port-security violations, and unauthorized DHCP Snooping / Dynamic ARP Inspection (DAI) block anomalies.
 
 ---
 
-### 📊 Phase 3: Analytics, Grafana Panels, and Webhook Integration
+### 📊 Phase 3: Traffic Flow Analytics, Backup Automation & UI Configuration
 
-**Timeline:** Weeks 6 – 7
+**Timeline:** Month 3 (Weeks 9 – 12)  
+**Focus:** Traffic parsing engines, automated maintenance modules, and advanced UI dashboards.
 
-**Focus:** User interfaces, outbound communications, and system maintenance automations.
-
-* **Milestone 3:** Core Platform Feature Complete.
-
+* **Milestone 3:** Full Integration of Flow Engines, Configuration Management, and Dashboards.
 * **Tasks & Deliverables:**
-* **Traffic Ingestion Setup:** Finalize ingestion handlers for bandwidth accounting metrics utilizing High-Capacity interface counters (`ifHCInOctets`/`ifHCOutOctets`).
-
-* **Grafana Dashboard Layouts:** Build customized visualization grids including:
-* *Network Operations Center (NOC) View:* Overall reachability map, critical infrastructure status, and live alert tickers.
-
-* *Interface Performance Panels:* Visual indicators for port utilization graphs, error rates (CRC), drop percentages, and latency metrics.
-
-* **Notification Microservice Integration:** Connect the Custom Go application to external notification channels, configuring:
-* **Telegram Bot Webhooks:** Secure API routing for priority alarms.
-* **SMTP Mail Relay:** Automated delivery for status digests and audit reports.
-
-* **Service Integration Engine:** Write outbound webhook drivers connecting the custom Go monitoring logic to corporate task software (Jira Service Desk / ServiceNow) for automated ticketing.
-
-* **Automated Backup Routines:** Set up schedule-driven Go workers executing secure SFTP/TFTP routines to safely back up network element configurations with automated differential tracking.
+  * **High-Capacity Traffic Ingestion:** Finalize precise interface bandwidth calculation formulas using 64-bit high-capacity counters (`ifHCInOctets` and `ifHCOutOctets`) to prevent counter overflow tracking anomalies on high-speed lines.
+  * **Flow Analytics Collection:** Deploy NetFlow/sFlow collection mechanisms to classify conversational traffic streams by application, source IP, and protocol distribution arrays.
+  * **Automated Configuration Backup Engine:** Code standalone secure Go worker routines that periodically log into active equipment (via SSH/SFTP/TFTP), extract running configuration files, record them in the relational archive, and run file diff metrics to alert on unauthorized adjustments.
+  * **Grafana Dashboard Panel Assembly:** Create functional visualization panels across the environment:
+    * *NOC Operations Dashboard:* High-level health indicators, real-time alert matrices, and device reachability maps.
+    * *Interface Engineering View:* Live graphs reflecting port utilization, error tracking indices (CRC/alignment drops), QoS queue performance, and latency spikes.
 
 ---
 
-### 🚀 Phase 4: Scale Verification, Optimization, and Go-Live
+### 🚀 Phase 4: Notification Orchestration, Scale Testing & Production Go-Live
 
-**Timeline:** Week 8
+**Timeline:** Month 4 (Weeks 13 – 16)  
+**Focus:** Notification channel integration, performance optimizations, load simulation runs, and complete handover.
 
-**Focus:** Performance tuning, security configurations, deployment validation, and final project sign-off.
-
-* **Milestone 4:** Final Production Handover & System Go-Live.
-
+* **Milestone 4:** Production Handover Sign-off & System Deployment.
 * **Tasks & Deliverables:**
-* **TimescaleDB Optimization:** Apply data compression rules to older data records to maximize storage efficiency and scale performance.
-
-* **Go Engine Profiling:** Audit concurrent Go routine operations and worker pools under simulated heavy trapping scenarios to eliminate execution bottlenecks.
-
-* **Grafana Alert Routing:** Set up state transition thresholds within Grafana panels to prevent redundant alerting cycles.
-
-* **User Acceptance Testing (UAT):** Run functional verification scenarios across the infrastructure (e.g., pulling test links, simulating configuration adjustments, triggering validation drops) to confirm alert responses.
-
-* **System Handover:** Deliver documentation covers, deployment blueprints, environment environment files, and complete source code to transition the project to production.
+  * **Notification Routing Microservices:** Wire up the Go alerting middleware to outbound channels, verifying markdown templates over:
+    * **Telegram API Integration:** Immediate notification delivery for high-severity infrastructure failures.
+    * **SMTP Mail Relays:** Scheduled system reports, non-urgent warnings, and long-term diagnostic summaries.
+  * **Ticketing Automation Integration:** Establish outbound webhook integrations mapping to target service management ecosystems (Jira Service Desk / ServiceNow APIs) to automatically generate operational tickets upon specific alarm triggers.
+  * **TimescaleDB Optimization Tuning:** Apply data compression configurations on historical hypertables to dramatically lower structural storage footprints without compromising query performance.
+  * **Scale Simulation & Benchmarking:** Stress-test the unified platform against high-load network simulation environments to guarantee poll stability, tuning Go concurrency worker pools to safely handle multi-thousand node configurations.
+  * **UAT & Production Provisioning:** Conduct extensive User Acceptance Testing (simulating network breaks, topology tracking scenarios, and verification alerts). Package final documentation sheets, deployment books, and environment configuration scripts for deployment sign-off.
 
 ---
 
 ## 📊 Summary Timeline Tracker
 
-| Week | Phase | Primary Objectives | Deliverable Checkpoint |
-| :---: | :--- | :--- | :--- |
-| **1 - 2** | Phase 1 | Database schemas, Telegraf collectors, and reachability tracking. | TimescaleDB Hypertables capturing live metrics. |
-| **3 - 5** | Phase 2 | Custom Go application for link flapping, loops, and telemetry states. | Go backend generating precise event tracking logs. |
-| **6 - 7** | Phase 3 | Grafana panels, Telegram notification scripts, config tools, and ticket hooks. | Interactive dashboard layout and webhook alerts functional. |
-| **8** | Phase 4 | Scalability tuning, validation runs, technical user review, and project sign-off. | Production code deployed and system keys handed over. |
+| Month | Weeks | Primary Objectives | Deliverable Checkpoint |
+| :---: | :---: | :--- | :--- |
+| **Month 1** | **1 - 4** | Platform VM installations, relational tables, TimescaleDB Hypertables, and foundational SNMP reachability collection. | Time-series metrics and Syslog events storing cleanly in the database layers. |
+| **Month 2** | **5 - 8** | Development of custom Go middleware application logic. Building out Link Flap damping, MAC loops, and hardware sensor thresholds. | Go microservice actively logging structural alert triggers based on database polling data. |
+| **Month 3** | **9 - 12** | NetFlow engine bindings, automated configuration backup automation scripts, and Grafana dashboard generation. | Multi-vendor traffic graphs, live NOC screens, and automatic config archives fully functional. |
+| **Month 4** | **13 - 16** | Notification configurations (Telegram/Email), ServiceNow/Jira webhooks, platform compression policies, and scale benchmarking. | Production system validated under heavy load testing and environment handover complete. |
